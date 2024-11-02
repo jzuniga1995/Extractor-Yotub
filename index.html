@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Descargador de Videos</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Descargar Video de YouTube</h1>
+        <form id="download-form" method="POST" action="/download">
+            <input type="text" name="url" placeholder="Ingresa la URL del video de YouTube" required>
+            <button type="submit">Descargar Video</button>
+        </form>
+        <div class="progress-container" id="progress-container">
+            <div class="progress-bar" id="progress-bar">0%</div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('download-form');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevenir el envío normal del formulario
+
+            const formData = new FormData(form);
+            progressContainer.style.display = 'block'; // Mostrar barra de progreso
+
+            fetch('/download', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error al descargar el video');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'video.mp4'; // Cambia esto según el nombre del archivo
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                progressContainer.style.display = 'none'; // Ocultar barra de progreso
+            })
+            .catch(error => {
+                alert(error.message);
+                progressContainer.style.display = 'none'; // Ocultar barra de progreso en caso de error
+            });
+
+            // Simulación de progreso (esto es solo para demostración)
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress < 100) {
+                    progress += 10;
+                    progressBar.style.width = progress + '%';
+                    progressBar.textContent = progress + '%';
+                } else {
+                    clearInterval(interval);
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
